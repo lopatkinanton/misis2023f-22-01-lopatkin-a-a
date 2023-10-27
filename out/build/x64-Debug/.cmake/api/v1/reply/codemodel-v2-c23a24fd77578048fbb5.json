@@ -1,0 +1,85 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"childIndexes" : 
+					[
+						1
+					],
+					"jsonFile" : "directory-.-Debug-d0094a50bb2071803777.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.20"
+					},
+					"projectIndex" : 0,
+					"source" : "."
+				},
+				{
+					"build" : "prj.codeforces",
+					"jsonFile" : "directory-prj.codeforces-Debug-54b588f5cbccc6f173d1.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.20"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "prj.codeforces",
+					"targetIndexes" : 
+					[
+						0,
+						1
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0,
+						1
+					],
+					"name" : "lopatkin-a-a",
+					"targetIndexes" : 
+					[
+						0,
+						1
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 1,
+					"id" : "1884a::@899f631a4aa791cf95cc",
+					"jsonFile" : "target-1884a-Debug-ec14894069c54ae24d04.json",
+					"name" : "1884a",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 1,
+					"id" : "1884b::@899f631a4aa791cf95cc",
+					"jsonFile" : "target-1884b-Debug-a15abd36ab8162d17d94.json",
+					"name" : "1884b",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "C:/Users/Anton/source/repos/lopatkinanton/misis2023f-22-01-lopatkin-a-a/out/build/x64-Debug",
+		"source" : "C:/Users/Anton/source/repos/lopatkinanton/misis2023f-22-01-lopatkin-a-a"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 4
+	}
+}
