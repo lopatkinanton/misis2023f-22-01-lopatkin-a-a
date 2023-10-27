@@ -1,6 +1,0 @@
-C:/Users/Anton/source/repos/lopatkinanton/misis2023f-22-01-lopatkin-a-a/out/build/x64-Debug/CMakeFiles/edit_cache.dir
-C:/Users/Anton/source/repos/lopatkinanton/misis2023f-22-01-lopatkin-a-a/out/build/x64-Debug/CMakeFiles/rebuild_cache.dir
-C:/Users/Anton/source/repos/lopatkinanton/misis2023f-22-01-lopatkin-a-a/out/build/x64-Debug/prj.codeforces/CMakeFiles/1884a.dir
-C:/Users/Anton/source/repos/lopatkinanton/misis2023f-22-01-lopatkin-a-a/out/build/x64-Debug/prj.codeforces/CMakeFiles/1884b.dir
-C:/Users/Anton/source/repos/lopatkinanton/misis2023f-22-01-lopatkin-a-a/out/build/x64-Debug/prj.codeforces/CMakeFiles/edit_cache.dir
-C:/Users/Anton/source/repos/lopatkinanton/misis2023f-22-01-lopatkin-a-a/out/build/x64-Debug/prj.codeforces/CMakeFiles/rebuild_cache.dir
