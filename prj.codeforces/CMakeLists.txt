@@ -1,2 +1,7 @@
 add_executable(1884a 1884a.cpp)
 add_executable(1884b 1884b.cpp)
+add_executable(1913a 1913a.cpp)
+add_executable(1913b 1913b.cpp)
+add_executable(1913c 1913c.cpp)
+add_executable(1917a 1917a.cpp)
+add_executable(1917b 1917b.cpp)
