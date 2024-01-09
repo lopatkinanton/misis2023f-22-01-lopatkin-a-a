@@ -4,14 +4,12 @@
 Asterism::Asterism(cv::Rect rect)
     : _rect(rect)
     , _corners({ cv::Point(0, 0),
-                cv::Point(0, rect.width - 1),
-                cv::Point(rect.height - 1, 0),
-                cv::Point(rect.height - 1, rect.width - 1) })
+                 cv::Point(0, rect.width - 1),
+                 cv::Point(rect.height - 1, 0),
+                 cv::Point(rect.height - 1, rect.width - 1) })
 {
     _updateSubdiv();
 }
-
-Asterism::Asterism(int width, int height) : Asterism(cv::Rect(0, 0, width, height)) {};
 
 void Asterism::loadPts(const std::string& path) {
     std::ifstream in(path);
@@ -23,7 +21,7 @@ void Asterism::loadPts(const std::string& path) {
         }
     }
     else {
-        throw std::invalid_argument("File is not found.");
+        throw std::runtime_error("Can't open the file. May be it does not exist.");
     }
     in.close();
 }
@@ -31,8 +29,7 @@ void Asterism::loadPts(const std::string& path) {
 void Asterism::savePts(const std::string& path) const {
     std::ofstream out(path);
     if (out.is_open()) {
-        std::vector<cv::Point> pts;
-        getPtsToDraw(pts);
+        std::vector<cv::Point> pts = getPts();
         for (auto& pt : pts) {
             out << pt.x << " " << pt.y << std::endl;
         }
@@ -40,100 +37,126 @@ void Asterism::savePts(const std::string& path) const {
     out.close();
 }
 
-void Asterism::_updateSubdiv() {
-    subdiv = cv::Subdiv2D(cv::Rect(0, 0, _rect.width * 10, _rect.height * 10));
-    for (auto& pt : _corners)
-        subdiv.insert(pt);
-    for (auto& pt : _points)
-        if (_rect.contains(pt))
-            subdiv.insert(pt);
-}
-
-int Asterism::insertPt(const cv::Point& pt) {
-    if (!_rect.contains(pt)) {
-        throw std::invalid_argument("Point is out of bounds.");
-    }
-    int idx = 0;
-    if (_free_indices.empty()) {
-        _points.push_back(pt);
-        idx = size(_points) - 1;
-    }
-    else {
-        idx = _free_indices.back();
-        _points[idx] = pt;
-        _free_indices.pop_back();
-    }
-    _updateSubdiv();
-    return idx;
-}
-
-void Asterism::movePt(const int& idx, const cv::Point& newCoords) {
-    if (!_rect.contains(newCoords)) {
-        throw std::invalid_argument("Point is out of bounds.");
-    }
-    _points[idx] = newCoords;
-    _updateSubdiv();
-}
-
-void Asterism::deletePt(const int& idx) {
-    _points[idx] = _rect.br();
-    _free_indices.push_back(idx);
-    _updateSubdiv();
-}
-
-int Asterism::findNearestPt(const cv::Point& pt) {
-    if (!_rect.contains(pt)) {
-        throw std::invalid_argument("Point is out of bounds.");
-    }
-    return subdiv.findNearest(pt) - 8;
-}
-
-cv::Point Asterism::getCoords(const int& idx) {
-    return subdiv.getVertex(idx + 8);
-}
-
-void Asterism::getPtsToDraw(std::vector<cv::Point>& pts) const {
-    pts.clear();
+std::vector<cv::Point> Asterism::getPts() const {
+    std::vector<cv::Point> pts;
     for (auto& pt : _points) {
         if (_rect.contains(pt)) {
             pts.push_back(pt);
         }
     }
+    return pts;
 }
 
-cv::Point Asterism::predictPairedPt(const cv::Point& pt, Asterism& pairedAst) {
+int Asterism::insertPt(const cv::Point& pt) {
     if (!_rect.contains(pt)) {
-        throw std::invalid_argument("Point is out of bounds.");
+        throw std::runtime_error("Point is out of bounds.");
     }
-    std::vector<cv::Point> lhsPts;
-    std::vector<cv::Point> rhsPts;
-    getPtsToDraw(lhsPts);
-    pairedAst.getPtsToDraw(rhsPts);
-    if (size(lhsPts) != size(rhsPts)) {
-        throw std::invalid_argument("Asterisms must have the same number of points.");
+    if (_free_indices.empty()) {
+        _points.push_back(pt);
     }
+    else {
+        _points[_free_indices.back()] = pt;
+        _free_indices.pop_back();
+    }
+    _updateSubdiv();
+    int idx = _subdiv.findNearest(pt) - 8;
+    return idx;
+}
 
-    cv::Point lhs_pt = pt;
+void Asterism::movePt(const int& idx, const cv::Point& offset) {
+    cv::Point pt = getPosition(idx);
+    if (!_rect.contains(pt + offset)) {
+        throw std::runtime_error("Point is out of bounds.");
+    }
+    setPosition(idx, pt + offset);
+    _updateSubdiv();
+}
 
+void Asterism::deletePt(const int& idx) {
+    int rawIdx = idx;
+    if (!_free_indices.empty()) {
+        rawIdx += _bias[idx];
+    }
+    _points[rawIdx] = _rect.br();
+    _free_indices.push_back(rawIdx);
+    _updateSubdiv();
+}
+
+int Asterism::findNearestPt(const cv::Point& pt) {
+    if (!_rect.contains(pt)) {
+        throw std::runtime_error("Point is out of bounds.");
+    }
+    return _subdiv.findNearest(pt) - 8;
+}
+
+void Asterism::setPosition(const int& idx, const cv::Point& position) {
+    if (!_rect.contains(position)) {
+        throw std::runtime_error("Point is out of bounds.");
+    }
+    int rawIdx = idx;
+    if (!_free_indices.empty()) {
+        rawIdx += _bias[idx];
+    }
+    _points[rawIdx] = position;
+    _updateSubdiv();
+}
+
+cv::Point Asterism::getPosition(const int& idx) {
+    return _subdiv.getVertex(idx + 8);
+}
+
+cv::Point Asterism::predictPosition(const cv::Point& srcPt, Asterism& srcAst) {
+    if (size(getPts()) != size(srcAst.getPts())) {
+        throw std::runtime_error("Asterisms must have the same number of points.");
+    }
+    std::vector<int> triangleIndices = srcAst.getTriangleIndices(srcPt);
+
+    std::vector<cv::Point2f> srcTriangle = { srcAst.getPosition(triangleIndices[0]),
+                                             srcAst.getPosition(triangleIndices[1]),
+                                             srcAst.getPosition(triangleIndices[2]) };
+
+    std::vector<cv::Point2f> dstTriangle = { getPosition(triangleIndices[0]),
+                                             getPosition(triangleIndices[1]),
+                                             getPosition(triangleIndices[2]) };
+
+    cv::Mat_<float> M = cv::getAffineTransform(srcTriangle, dstTriangle);
+
+    cv::Mat srcPtMat = (cv::Mat_<float>(3, 1) << srcPt.x, srcPt.y, 1);
+
+    cv::Mat dstPtMat = M * srcPtMat;
+
+    cv::Point dstPt = cv::Point(dstPtMat.at<float>(0, 0), dstPtMat.at<float>(1, 0));
+
+    return dstPt;
+}
+
+std::vector<int> Asterism::getTriangleIndices(const cv::Point& pt) {
+    if (!_rect.contains(pt)) {
+        throw std::runtime_error("Point is out of bounds.");
+    }
     int e, v;
-    int l = subdiv.locate(lhs_pt, e, v);
-    int ne = subdiv.getEdge(e, cv::Subdiv2D::NEXT_AROUND_LEFT);
+    int l = _subdiv.locate(pt, e, v);
+    int ne = _subdiv.getEdge(e, cv::Subdiv2D::NEXT_AROUND_LEFT);
 
-    std::vector<cv::Point2f> lhs_triangle = { subdiv.getVertex(subdiv.edgeOrg(e)),
-                                              subdiv.getVertex(subdiv.edgeDst(e)),
-                                              subdiv.getVertex(subdiv.edgeDst(ne)) };
+    std::vector<int> triangleIndices = { _subdiv.edgeOrg(e) - 8,
+                                         _subdiv.edgeDst(e) - 8,
+                                         _subdiv.edgeDst(ne) - 8 };
+    return triangleIndices;
+}
 
-    std::vector<cv::Point2f> rhs_triangle = { pairedAst.subdiv.getVertex(pairedAst.subdiv.edgeOrg(e)),
-                                              pairedAst.subdiv.getVertex(pairedAst.subdiv.edgeDst(e)),
-                                              pairedAst.subdiv.getVertex(pairedAst.subdiv.edgeDst(ne)) };
-
-    cv::Mat_<float> M = cv::getAffineTransform(lhs_triangle, rhs_triangle);
-
-    cv::Mat pointMat = (cv::Mat_<float>(3, 1) << lhs_pt.x, lhs_pt.y, 1);
-
-    cv::Mat transformedPointMat = M * pointMat;
-
-    cv::Point rhs_pt = cv::Point(transformedPointMat.at<float>(0, 0), transformedPointMat.at<float>(1, 0));
-
-    return rhs_pt;
+void Asterism::_updateSubdiv() {
+    _subdiv = cv::Subdiv2D(cv::Rect(0, 0, _rect.width * 10, _rect.height * 10));
+    for (auto& pt : _corners)
+        _subdiv.insert(pt);
+    _bias.resize(_points.size() - _free_indices.size());
+    int bias = 0;
+    for (int i = 0; i < _points.size(); i += 1) {
+        if (_rect.contains(_points[i])) {
+            _subdiv.insert(_points[i]);
+            _bias[i - bias] = bias;
+        }
+        else {
+            bias += 1;
+        }
+    }
 }
