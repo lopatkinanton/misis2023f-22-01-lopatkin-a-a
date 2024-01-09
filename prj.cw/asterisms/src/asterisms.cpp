@@ -4,9 +4,9 @@
 Asterism::Asterism(cv::Rect rect)
     : _rect(rect)
     , _corners({ cv::Point(0, 0),
-                 cv::Point(0, rect.width - 1),
-                 cv::Point(rect.height - 1, 0),
-                 cv::Point(rect.height - 1, rect.width - 1) })
+                 cv::Point(rect.width - 1, 0),
+                 cv::Point(0, rect.height - 1),
+                 cv::Point(rect.width - 1, rect.height - 1) })
 {
     _updateSubdiv();
 }
