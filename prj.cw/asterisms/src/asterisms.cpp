@@ -82,6 +82,9 @@ int Asterism::findNearestPt(const cv::Point2f& pt) {
     if (!_rect.contains(pt)) {
         throw std::runtime_error("Point is out of bounds.");
     }
+    if (countPts() == 0) {
+        return -1;
+    }
     return _subdiv.findNearest(pt) - 4;
 }
 
