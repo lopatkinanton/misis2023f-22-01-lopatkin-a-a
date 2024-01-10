@@ -27,10 +27,10 @@ int main(int argc, char** argv) {
 	printPts(rightAst);
 
 	int ptRadius = 5; //радиус отрисовки точек в графическом интерфейсе
-	std::vector<cv::Point2f> clickedPts = { cv::Point2f(124.0, 190.0),  cv::Point2f(130.0, 190.0) }; //зафиксированный клик по левому изображению
+	std::vector<cv::Point2f> clickedPts = { cv::Point2f(124.0, 190.0),  cv::Point2f(130.0, 190.0), cv::Point2f(140.0, 250.0), cv::Point2f(100.0, 90.0) }; //зафиксированный клик по левому изображению
 	
 	for (auto& clickedPt : clickedPts) {
-		std::cout << clickedPt << '\n';
+		std::cout << clickedPt << ' ';
 		//индекс точки, ближайшей к координатам клика
 		int idx = leftAst.findNearestPt(clickedPt);
 		//координаты ближайшей точки
@@ -39,12 +39,14 @@ int main(int argc, char** argv) {
 		if (cv::norm(nearestPt - clickedPt) < ptRadius) {
 			//если выбрана уже существующая точка, 
 			//то ее можно подвинуть или удалить (вместе с ее парой)
-			//leftAst.setPosition(idx, cv::Point(115, 112));
+			//leftAst.setPosition(idx, clickedPt);
+			std::cout << "delete\n";
 			leftAst.deletePt(idx);
 			rightAst.deletePt(idx);
 		}
 		else {
 			//иначе - вычислить координаты парной точки и добавить новую пару в созвездия
+			std::cout << "ins\n";
 			cv::Point2f pairedPt = rightAst.predictPosition(clickedPt, leftAst);
 			leftAst.insertPt(clickedPt);
 			rightAst.insertPt(pairedPt);
