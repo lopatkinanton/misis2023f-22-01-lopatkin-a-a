@@ -3,10 +3,10 @@
 
 Asterism::Asterism(cv::Rect rect)
     : _rect(rect)
-    , _corners({ cv::Point(0, 0),
-                 cv::Point(rect.width - 1, 0),
-                 cv::Point(0, rect.height - 1),
-                 cv::Point(rect.width - 1, rect.height - 1) })
+    , _corners({ cv::Point2f(0, 0),
+                 cv::Point2f(rect.width - 1, 0),
+                 cv::Point2f(0, rect.height - 1),
+                 cv::Point2f(rect.width - 1, rect.height - 1) })
 {
     _updateSubdiv();
 }
@@ -14,10 +14,10 @@ Asterism::Asterism(cv::Rect rect)
 void Asterism::loadPts(const std::string& path) {
     std::ifstream in(path);
     if (in.is_open()) {
-        int x = 0;
-        int y = 0;
+        float x = 0;
+        float y = 0;
         while (in >> x >> y) {
-            insertPt(cv::Point(x, y));
+            insertPt(cv::Point2f(x, y));
         }
     }
     else {
@@ -26,28 +26,19 @@ void Asterism::loadPts(const std::string& path) {
     in.close();
 }
 
-void Asterism::savePts(const std::string& path) const {
+void Asterism::savePts(const std::string& path) const noexcept {
     std::ofstream out(path);
     if (out.is_open()) {
-        std::vector<cv::Point> pts = getPts();
-        for (auto& pt : pts) {
-            out << pt.x << " " << pt.y << std::endl;
+        for (auto& pt : _points) {
+            if (_rect.contains(pt)) {
+                out << pt.x << " " << pt.y << std::endl;
+            }
         }
     }
     out.close();
 }
 
-std::vector<cv::Point> Asterism::getPts() const {
-    std::vector<cv::Point> pts;
-    for (auto& pt : _points) {
-        if (_rect.contains(pt)) {
-            pts.push_back(pt);
-        }
-    }
-    return pts;
-}
-
-int Asterism::insertPt(const cv::Point& pt) {
+int Asterism::insertPt(const cv::Point2f& pt) {
     if (!_rect.contains(pt)) {
         throw std::runtime_error("Point is out of bounds.");
     }
@@ -63,8 +54,8 @@ int Asterism::insertPt(const cv::Point& pt) {
     return idx;
 }
 
-void Asterism::movePt(const int& idx, const cv::Point& offset) {
-    cv::Point pt = getPosition(idx);
+void Asterism::movePt(const int& idx, const cv::Point2f& offset) {
+    cv::Point2f pt = getPosition(idx);
     if (!_rect.contains(pt + offset)) {
         throw std::runtime_error("Point is out of bounds.");
     }
@@ -82,14 +73,14 @@ void Asterism::deletePt(const int& idx) {
     _updateSubdiv();
 }
 
-int Asterism::findNearestPt(const cv::Point& pt) {
+int Asterism::findNearestPt(const cv::Point2f& pt) {
     if (!_rect.contains(pt)) {
         throw std::runtime_error("Point is out of bounds.");
     }
     return _subdiv.findNearest(pt) - 8;
 }
 
-void Asterism::setPosition(const int& idx, const cv::Point& position) {
+void Asterism::setPosition(const int& idx, const cv::Point2f& position) {
     if (!_rect.contains(position)) {
         throw std::runtime_error("Point is out of bounds.");
     }
@@ -101,12 +92,16 @@ void Asterism::setPosition(const int& idx, const cv::Point& position) {
     _updateSubdiv();
 }
 
-cv::Point Asterism::getPosition(const int& idx) {
-    return _subdiv.getVertex(idx + 8);
+cv::Point2f Asterism::getPosition(const int& idx) noexcept {
+    int rawIdx = idx;
+    if (!_free_indices.empty()) {
+        rawIdx += _bias[idx];
+    }
+    return _points[rawIdx];
 }
 
-cv::Point Asterism::predictPosition(const cv::Point& srcPt, Asterism& srcAst) {
-    if (size(getPts()) != size(srcAst.getPts())) {
+cv::Point2f Asterism::predictPosition(const cv::Point2f& srcPt, Asterism& srcAst) {
+    if (countPts() != srcAst.countPts()) {
         throw std::runtime_error("Asterisms must have the same number of points.");
     }
     std::vector<int> triangleIndices = srcAst.getTriangleIndices(srcPt);
@@ -125,12 +120,12 @@ cv::Point Asterism::predictPosition(const cv::Point& srcPt, Asterism& srcAst) {
 
     cv::Mat dstPtMat = M * srcPtMat;
 
-    cv::Point dstPt = cv::Point(dstPtMat.at<float>(0, 0), dstPtMat.at<float>(1, 0));
+    cv::Point2f dstPt = cv::Point2f(dstPtMat.at<float>(0, 0), dstPtMat.at<float>(1, 0));
 
     return dstPt;
 }
 
-std::vector<int> Asterism::getTriangleIndices(const cv::Point& pt) {
+std::vector<int> Asterism::getTriangleIndices(const cv::Point2f& pt) {
     if (!_rect.contains(pt)) {
         throw std::runtime_error("Point is out of bounds.");
     }
@@ -148,7 +143,7 @@ void Asterism::_updateSubdiv() {
     _subdiv = cv::Subdiv2D(cv::Rect(0, 0, _rect.width * 10, _rect.height * 10));
     for (auto& pt : _corners)
         _subdiv.insert(pt);
-    _bias.resize(_points.size() - _free_indices.size());
+    _bias.resize(countPts());
     int bias = 0;
     for (int i = 0; i < _points.size(); i += 1) {
         if (_rect.contains(_points[i])) {

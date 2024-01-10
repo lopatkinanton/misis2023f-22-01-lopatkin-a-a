@@ -4,12 +4,13 @@
 #include <asterisms/asterisms.hpp>
 
 
-void printPts(std::vector<cv::Point> pts) {
-    for (auto& pt : pts) {
-        std::cout << pt << " ";
+void printPts(Asterism& ast) {
+	for (int i = 0; i < ast.countPts(); i += 1) {
+		std::cout << ast.getPosition(i) << ' ';
     }
     std::cout << '\n';
 }
+
 
 int main(int argc, char** argv) {
 	//создание двух созвездий на плоскости размером 256x256
@@ -22,20 +23,18 @@ int main(int argc, char** argv) {
 	leftAst.loadPts("./data/left_points.txt");
 	rightAst.loadPts("./data/right_points.txt");
 
-	std::vector<cv::Point> lpts = leftAst.getPts();
-	printPts(lpts);
-	std::vector<cv::Point> rpts = rightAst.getPts();
-	printPts(rpts);
+	printPts(leftAst);
+	printPts(rightAst);
 
 	int ptRadius = 5; //радиус отрисовки точек в графическом интерфейсе
-	std::vector<cv::Point> clickedPts = { cv::Point(124, 190),  cv::Point(130, 190) }; //зафиксированный клик по левому изображению
+	std::vector<cv::Point2f> clickedPts = { cv::Point2f(124.0, 190.0),  cv::Point2f(130.0, 190.0) }; //зафиксированный клик по левому изображению
 	
 	for (auto& clickedPt : clickedPts) {
 		std::cout << clickedPt << '\n';
 		//индекс точки, ближайшей к координатам клика
 		int idx = leftAst.findNearestPt(clickedPt);
 		//координаты ближайшей точки
-		cv::Point nearestPt = leftAst.getPosition(idx);
+		cv::Point2f nearestPt = leftAst.getPosition(idx);
 
 		if (cv::norm(nearestPt - clickedPt) < ptRadius) {
 			//если выбрана уже существующая точка, 
@@ -46,16 +45,13 @@ int main(int argc, char** argv) {
 		}
 		else {
 			//иначе - вычислить координаты парной точки и добавить новую пару в созвездия
-			cv::Point pairedPt = rightAst.predictPosition(clickedPt, leftAst);
+			cv::Point2f pairedPt = rightAst.predictPosition(clickedPt, leftAst);
 			leftAst.insertPt(clickedPt);
 			rightAst.insertPt(pairedPt);
 		}
 
-		//получение массива отмеченных точек
-		std::vector<cv::Point> lpts = leftAst.getPts();
-		printPts(lpts);
-		std::vector<cv::Point> rpts = rightAst.getPts();
-		printPts(rpts);
+		printPts(leftAst);
+		printPts(rightAst);
 	}
 
 	//сохранение точек в текстовый файл
