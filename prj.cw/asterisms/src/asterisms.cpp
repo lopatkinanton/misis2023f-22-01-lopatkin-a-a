@@ -103,7 +103,7 @@ void Asterism::setPosition(const int& idx, const cv::Point2f& position) {
     _updateSubdiv();
 }
 
-cv::Point2f Asterism::getPosition(const int& idx) {
+cv::Point2f Asterism::getPosition(const int& idx) const {
     if (idx < 0 && idx >= countPts()) {
         throw std::out_of_range("Index is out of range.");
     }
@@ -114,7 +114,7 @@ cv::Point2f Asterism::getPosition(const int& idx) {
     return _points[rawIdx];
 }
 
-cv::Point2f Asterism::predictPosition(const cv::Point2f& srcPt, Asterism& srcAst) {
+cv::Point2f Asterism::predictPosition(const cv::Point2f& srcPt, Asterism& srcAst) const {
     if (countPts() != srcAst.countPts()) {
         throw std::runtime_error("Asterisms must have the same number of points.");
     }

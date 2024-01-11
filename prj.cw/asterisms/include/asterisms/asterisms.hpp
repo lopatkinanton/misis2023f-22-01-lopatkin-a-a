@@ -39,7 +39,7 @@ public:
     //! \brief Перемещение точки
     //!
     //! \param[in] idx - индекс передвигаемой точки
-    //! \param[in] offset - сдвиг: offset.x - горизонатльный и offset.y - вертикальный
+    //! \param[in] offset - сдвиг: offset.x - горизонтальный и offset.y - вертикальный
     //! \throw std::runtime_error - в случае, если в результате перемещения получается точка, лежащая вне области, на которой задано созвездие
     //! \throw std::out_of_range - в случае, если переданный индекс больше или равен количеству точек, либо отрицательный
     void movePt(const int& idx, const cv::Point2f& offset);
@@ -50,7 +50,7 @@ public:
     //! \throw std::out_of_range - в случае, если переданный индекс больше или равен количеству точек, либо отрицательный
     void deletePt(const int& idx);
 
-    //! \brief Установка новых коориднат точки
+    //! \brief Установка новых координат точки
     //!
     //! \param[in] idx - индекс обновляемой точки
     //! \param[in] position - новые координаты точки
@@ -58,12 +58,12 @@ public:
     //! \throw std::out_of_range - в случае, если переданный индекс больше или равен количеству точек, либо отрицательный
     void setPosition(const int& idx, const cv::Point2f& position);
 
-    //! \brief Получение коориднат точки
+    //! \brief Получение координат точки
     //!
-    //! \param[in] idx - индек точки, координаты которой требуются
+    //! \param[in] idx - индекс точки, координаты которой требуются
     //! \return pt - точка с индексом idx
     //! \throw std::out_of_range - в случае, если переданный индекс больше или равен количеству точек, либо отрицательный
-    cv::Point2f getPosition(const int& idx);
+    cv::Point2f getPosition(const int& idx) const;
 
     //! \brief Вычисление предполагаемой позиции точки на основании позиции соответствующей точки в парном созвездии
     //!
@@ -71,7 +71,7 @@ public:
     //! \param[in] srcAst - парное созвездие
     //! \throw std::runtime_error - в случае, если в созвездиях разное количество точек
     //! \throw std::runtime_error - в случае, если позиция передаваемой точки находится вне области, на которой задано передаваемое созвездие
-    cv::Point2f predictPosition(const cv::Point2f& srcPt, Asterism& srcAst);
+    cv::Point2f predictPosition(const cv::Point2f& srcPt, Asterism& srcAst) const;
 
     //! \brief Поиск точки, ближайшей к данной
     //!

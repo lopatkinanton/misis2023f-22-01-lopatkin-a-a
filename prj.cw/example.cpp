@@ -27,41 +27,27 @@ int main(int argc, char** argv) {
 	printPts(rightAst);
 
 	int ptRadius = 5; //радиус отрисовки точек в графическом интерфейсе
-	std::vector<cv::Point2f> clickedPts = { cv::Point2f(124.0, 190.0),  cv::Point2f(130.0, 190.0), cv::Point2f(140.0, 250.0), cv::Point2f(100.0, 90.0) }; //зафиксированный клик по левому изображению
+	std::vector<cv::Point2f> clickedPts = { cv::Point2f(124.0, 190.0),  cv::Point2f(130.0, 190.0), cv::Point2f(140.0, 250.0), cv::Point2f(100.0, 90.0) }; //зафиксированные клики по левому изображению
 	
 	for (auto& clickedPt : clickedPts) {
 		std::cout << "Cursor: " <<  clickedPt << '\n';
 		//индекс точки, ближайшей к координатам клика
 		int idx = leftAst.findNearestPt(clickedPt);
-		//координаты ближайшей точки
-		if (idx == -1) {
+
+
+		if (idx >= 0 && cv::norm(leftAst.getPosition(idx) - clickedPt) < ptRadius) {
+			std::cout << "delete\n";
+			leftAst.deletePt(idx);
+			rightAst.deletePt(idx);
+		}
+		else {
+			//иначе - вычислить координаты парной точки и добавить новую пару в созвездия
 			std::cout << "ins\n";
 			cv::Point2f pairedPt = rightAst.predictPosition(clickedPt, leftAst);
 			leftAst.insertPt(clickedPt);
 			rightAst.insertPt(pairedPt);
 		}
-		else {
-			cv::Point2f nearestPt = leftAst.getPosition(idx);
-			std::cout << "Nearest point: " << nearestPt << '\n';
-
-			if (cv::norm(nearestPt - clickedPt) < ptRadius) {
-				//если выбрана уже существующая точка, 
-				//то ее можно подвинуть или удалить (вместе с ее парой)
-				//leftAst.setPosition(idx, clickedPt);
-				std::cout << "delete\n";
-				leftAst.deletePt(idx);
-				rightAst.deletePt(idx);
-			}
-			else {
-				//иначе - вычислить координаты парной точки и добавить новую пару в созвездия
-				std::cout << "ins\n";
-				cv::Point2f pairedPt = rightAst.predictPosition(clickedPt, leftAst);
-				leftAst.insertPt(clickedPt);
-				rightAst.insertPt(pairedPt);
-			}
-		}
 		
-
 		printPts(leftAst);
 		printPts(rightAst);
 	}

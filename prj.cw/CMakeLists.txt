@@ -3,6 +3,8 @@ project(example)
 find_package(OpenCV REQUIRED)
 find_package(Doxygen)
 
+
+
 include_directories(asterisms/include)
 add_executable(${PROJECT_NAME} "example.cpp")
 
